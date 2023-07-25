@@ -1,0 +1,11 @@
+{
+  "name": "kanban",
+  "version": "1.0.0",
+  "description": "A task management app",
+  "main": "js/main.js",
+  "scripts": {
+    "build": "tsc scripts/main.ts --watch"
+  },
+  "author": "Adeola Fadare",
+  "license": "ISC"
+}
