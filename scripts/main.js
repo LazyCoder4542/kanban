@@ -1,97 +1,101 @@
-var myApp = /** @class */ (function () {
-    function myApp(data) {
-        this.board = {
-            name: '',
-            columns: [{
-                    name: '',
-                    tasks: [{
-                            name: '',
-                            subtasks: [{
-                                    name: '',
-                                    isCompleted: false
-                                }]
-                        }]
-                }]
-        };
+class myApp {
+    constructor(data) {
+        this.currentBoard = 0;
         this.data = data;
         console.log(this.data);
-        this.board = this.getBoard("Platform Launch");
         this.updateView();
         this.popupInit();
         this.insertColumnInit();
     }
-    myApp.prototype.generateNav = function () {
-        var _this = this;
-        var nav = document.querySelector('#nav-desktop');
+    generateNav() {
+        let nav = document.querySelector('#nav-desktop');
         nav.innerHTML = "";
-        this.data.boards.forEach(function (el) {
-            var li = document.createElement('li');
-            var span1 = document.createElement('span');
-            var span2 = document.createElement('span');
+        this.data.boards.forEach((el, id) => {
+            let li = document.createElement('li');
+            let span1 = document.createElement('span');
+            let span2 = document.createElement('span');
             span2.innerText = el.name;
             li.appendChild(span1);
             li.appendChild(span2);
             li.setAttribute('data-name', el.name);
-            if (el.name == _this.board.name) {
+            if (id == this.currentBoard) {
                 li.className = "active";
             }
             else {
-                li.addEventListener('click', function () {
+                li.addEventListener('click', () => {
                     console.log(el.name);
-                    _this.board = el;
-                    _this.updateView();
+                    this.currentBoard = id;
+                    this.updateView();
                 });
             }
-            var str = "<li ".concat(el.name == _this.board.name ? 'class="active"' : "", " data-name=").concat(el.name, ">\n                <span></span>\n                <span>").concat(el.name, "</span>\n            </li>");
+            li.setAttribute("data-id", `${id}`);
             nav.append(li);
         });
-    };
-    myApp.prototype.updateView = function () {
+    }
+    updateView() {
         this.generateNav();
         this.setBoard();
-    };
-    myApp.prototype.getBoard = function (boardName) {
-        //// FIND DATA
-        var currentBoard = this.data.boards.find(function (board) { return board.name == boardName; });
-        return currentBoard;
-    };
-    myApp.prototype.setBoard = function () {
-        //// UPDATE DOM
-        // heading
-        document.getElementById('board-name').innerText = this.board.name;
-        // columns
-        var div = document.querySelector('.columns');
+    }
+    getBoard(boardName) {
+        let index = this.data.boards.forEach((el, id) => {
+            console.log(id);
+            if (el.name === boardName) {
+                return id;
+            }
+        });
+        return index;
+    }
+    setBoard() {
+        let board = this.data.boards[this.currentBoard];
+        document.getElementById('board-name').innerText = board.name;
+        let div = document.querySelector('.columns');
         div.innerHTML = "";
-        for (var i = 0; i < this.board.columns.length; i++) {
-            var column = this.board.columns[i];
-            div.innerHTML += this.columnTemplate(column);
+        for (let i = 0; i < board.columns.length; i++) {
+            const column = board.columns[i];
+            div.appendChild(this.columnTemplate(column, i));
         }
-    };
-    myApp.prototype.toggleBoard = function () { };
-    myApp.prototype.taskTemplate = function (obj) {
-        var str = "<div>\n            <h3>".concat(obj.name, "</h3>\n            <p>").concat(obj.subtasks.filter(function (el) { return el.isCompleted == true; }).length, " of ").concat(obj.subtasks.length, " ").concat(obj.subtasks.length > 1 ? 'subtasks' : 'subtask', "</p>\n        </div>");
-        return str;
-    };
-    myApp.prototype.columnTemplate = function (obj) {
-        var _this = this;
-        var str = "<div class=\"column\">\n            <h2>\n                <span>".concat(obj.name, "</span>\n                <span>(").concat(obj.tasks.length, ")</span>\n            </h2>\n            <div class=\"tasks\">\n            ").concat(obj.tasks.map(function (task) { return _this.taskTemplate(task); }).join(""), "\n            </div>\n        </div>");
-        return str;
-    };
-    myApp.prototype.popupInit = function () {
-        var _this = this;
-        var popup = document.createElement('div');
+    }
+    taskTemplate(obj, id, columnID) {
+        let div = document.createElement('div');
+        div.setAttribute("data-id", `${id}`);
+        var str = `<h3>${obj.name}</h3>
+        <p>${obj.subtasks.filter(el => el.isCompleted == true).length} of ${obj.subtasks.length} ${obj.subtasks.length > 1 ? 'subtasks' : 'subtask'}</p>
+        `;
+        div.innerHTML = str;
+        div.addEventListener('click', () => {
+            this.displayTaskPopup(columnID, id);
+        });
+        return div;
+    }
+    columnTemplate(obj, id) {
+        let div = document.createElement('div');
+        div.className = "column";
+        var str = `<h2>
+            <span>${obj.name}</span>
+            <span>(${obj.tasks.length})</span>
+        </h2>
+        <div class="tasks">
+        </div>`;
+        div.innerHTML = str;
+        obj.tasks.forEach((task, index) => {
+            div.querySelector('.tasks').appendChild(this.taskTemplate(task, index, id));
+        });
+        return div;
+    }
+    popupInit() {
+        let popup = document.createElement('div');
         popup.id = "popup";
-        var overlay = document.createElement('div');
-        overlay.addEventListener('click', function () {
-            _this.togglePopup("close");
+        let overlay = document.createElement('div');
+        overlay.addEventListener('click', () => {
+            this.togglePopup("close");
         });
         overlay.id = "overlay";
         document.body.append(popup);
         document.body.append(overlay);
-    };
-    myApp.prototype.togglePopup = function (status) {
-        var overlay = document.querySelector("#overlay");
-        var popup = document.querySelector("#popup");
+    }
+    togglePopup(status) {
+        let overlay = document.querySelector("#overlay");
+        let popup = document.querySelector("#popup");
         if (overlay && popup) {
             if (status === "open") {
                 overlay.className = "opened";
@@ -102,33 +106,160 @@ var myApp = /** @class */ (function () {
                 popup.className = "";
             }
         }
-    };
-    myApp.prototype.insertColumnInit = function () {
-        var _this = this;
-        var elem = document.querySelector('#insertNewColumn');
-        elem.addEventListener("click", function () {
-            _this.insertColumnPopup();
+    }
+    insertColumnInit() {
+        let elem = document.querySelector('#insertNewColumn');
+        elem.addEventListener("click", () => {
+            this.insertColumnPopup();
         });
-    };
-    myApp.prototype.editBoardPopup = function (type) {
-        if (type === void 0) { type = undefined; }
-        var popup = document.querySelector("#popup");
+    }
+    editBoardPopup(type = undefined) {
+        let board = this.data.boards[this.currentBoard];
+        let popup = document.querySelector("#popup");
+        popup.innerHTML = this.editBoardPopupTemplate();
+        board.columns.forEach((column, id) => {
+            let div = document.createElement('div');
+            let str = `<input class="input-box" value="${column.name}">
+            <span class="close">
+            <img src="./assets/icons/close.svg" />
+            </span>`;
+            div.innerHTML = str;
+            div.setAttribute('data-existing', `${id}`);
+            div.querySelector('.close').addEventListener('click', () => {
+                div.remove();
+            });
+            popup.querySelector('.input-container').appendChild(div);
+        });
+        popup.querySelector('#addNewColumn').addEventListener('click', () => {
+            this.addNewInputBox(popup.querySelector(".input-container"), "eg. Todo");
+        });
         if (type === "insert") {
-            popup.innerHTML = this.editBoardPopupTemplate();
+            this.addNewInputBox(popup.querySelector(".input-container"), "eg. Todo");
         }
+        popup.querySelector('#saveChanges').addEventListener('click', () => {
+            saveChanges();
+        });
         this.togglePopup("open");
-    };
-    myApp.prototype.editBoardPopupTemplate = function (type) {
-        if (type === void 0) { type = undefined; }
-        var str = "<div>\n            <h1>Edit Board</h1>\n            <div>\n                <h2>Board Name</h2>\n                <div class=\"input-box\">".concat(this.board.name, "</div>\n            </div>\n        </div>");
+        const validateInput = () => { };
+        const saveChanges = () => {
+            let newBoard = {
+                name: "",
+                columns: []
+            };
+            let boardNameElem = popup.querySelector('#board-name');
+            newBoard.name = boardNameElem.value;
+            popup.querySelector('.input-container').querySelectorAll('input').forEach(input => {
+                if (input.value.trim() != "") {
+                    var eID = input.parentElement.getAttribute("data-existing") ? parseInt(input.parentElement.getAttribute("data-existing")) : null;
+                    if (eID != null) {
+                        if (input.value !== board.columns[eID].name) {
+                            newBoard.columns.push(Object.assign(Object.assign({}, board.columns[eID]), { name: input.value }));
+                        }
+                        else {
+                            newBoard.columns.push(Object.assign({}, board.columns[eID]));
+                        }
+                    }
+                    else
+                        newBoard.columns.push({ name: input.value, tasks: [] });
+                }
+            });
+            console.log(newBoard);
+            this.data.boards[this.currentBoard] = newBoard;
+            this.togglePopup("close");
+            this.updateView();
+        };
+    }
+    displayTaskPopup(columnID, taskID) {
+        let columns = this.data.boards[this.currentBoard].columns;
+        let task = columns[columnID].tasks[taskID];
+        let popup = document.querySelector("#popup");
+        popup.innerHTML = this.displayTaskPopupTemplate(columnID, taskID);
+        task.subtasks.forEach((subtask, id) => {
+            let checkbox = this.generateCheckbox(subtask.name, subtask.isCompleted);
+            checkbox.addEventListener('click', () => {
+                if (this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted) {
+                    checkbox.removeAttribute("checked");
+                    this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted = false;
+                }
+                else {
+                    checkbox.setAttribute("checked", "");
+                    this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted = true;
+                }
+                this.updateView();
+            });
+            popup.querySelector(".checkbox-container").appendChild(checkbox);
+        });
+        this.togglePopup("open");
+    }
+    editBoardPopupTemplate() {
+        let board = this.data.boards[this.currentBoard];
+        let str = `<div class="edit-board">
+            <h1>Edit Board</h1>
+            <div>
+                <h2>Board Name</h2>
+                <input class="input-box" value="${board.name}" id="board-name">
+            </div>
+            <div>
+                <h2>Board Columns</h2>
+                <div class="input-container">
+                </div>
+            </div>
+            <div class="btn btn-secondary" id="addNewColumn">
+                    + Add New Column
+            </div>
+            <div class="btn btn-primary" id="saveChanges">
+                    Save Changes
+            </div>
+        </div>`;
         return str;
-    };
-    myApp.prototype.insertColumnPopup = function () {
+    }
+    displayTaskPopupTemplate(columnID, taskID) {
+        let columns = this.data.boards[this.currentBoard].columns;
+        let task = columns[columnID].tasks[taskID];
+        let str = `<div class="display-task">
+            <header>
+                <h1>${task.name}</h1>
+            </header>
+            <div>
+                <h2>Subtasks (${task.subtasks.filter(el => el.isCompleted == true).length} of ${task.subtasks.length})</h2>
+                <div class="checkbox-container">
+                </div>
+            </div>
+            <div>
+                <h2>Current Status</h2>
+                <div class="select-container">
+                </div>
+            </div>
+        </div>`;
+        return str;
+    }
+    insertColumnPopup() {
         this.editBoardPopup("insert");
-    };
-    return myApp;
-}());
+    }
+    addNewInputBox(inputContainer, inputPlaceholder) {
+        let div = document.createElement('div');
+        let str = `<input class="input-box" placeholder="${inputPlaceholder}">
+        <span class="close">
+        <img src="./assets/icons/close.svg" />
+        </span>`;
+        div.innerHTML = str;
+        div.querySelector('.close').addEventListener('click', () => {
+            div.remove();
+        });
+        inputContainer.appendChild(div);
+    }
+    generateCheckbox(name, isChecked) {
+        let div = document.createElement('div');
+        div.className = "checkbox-box";
+        if (isChecked)
+            div.setAttribute("checked", "");
+        let str = `<span></span>
+        <span>${name}</span>`;
+        div.innerHTML = str;
+        return div;
+    }
+}
 var app;
-fetch('./data/dev-data.json').then(function (res) { return res.json(); }).then(function (data) {
+fetch('./data/dev-data.json').then(res => res.json()).then(data => {
     app = new myApp(data);
 });

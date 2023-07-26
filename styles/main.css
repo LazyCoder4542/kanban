@@ -250,11 +250,130 @@ main {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-height: 80vh;
-    width: 20rem;
+    max-height: 90vh;
+    max-width: 90vw;
+    width: 30rem;
     background-color: var(--clr-header);
     border-radius: .5rem;
+    padding: 2rem;
+    overflow-y: auto;
+    flex-direction: column;
 }
+#popup h1 {
+    font-size: 1.13rem;
+}
+#popup h2 {
+    font-size: 0.75rem;
+    letter-spacing: normal;
+}
+#popup .input-box {
+    font-size: 0.81rem;
+    padding: .5rem 1rem;
+    border-radius: .25rem;
+    background-color: transparent;
+    border: 1px solid rgba(130, 143, 163, 0.25);
+    color: var(--clr-headings);
+    width: 100%;
+    outline: transparent !important;
+    text-transform: capitalize;
+}
+#popup .input-box:focus {
+    border-color: var(--clr-primary)
+}
+#popup .checkbox-box {
+    font-size: 0.81rem;
+    padding: .75rem;
+    border-radius: .25rem;
+    background-color: var(--clr-background);
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--clr-headings);
+    font-weight: 700;
+    cursor: pointer;
+}
+#popup .checkbox-box > span:nth-child(1){
+    width: 1rem;
+    aspect-ratio: 1 / 1;
+    background-color: var(--clr-header);
+    border-radius: .25rem;
+}
+#popup .checkbox-box[checked] {
+    color: var(--clr-text);
+}
+#popup .checkbox-box[checked] > span:nth-child(1) {
+    background-color: var(--clr-primary);
+    background-image: url(../assets/icons/tick.svg);
+    background-repeat: no-repeat;
+    background-size: 60%;
+    background-position: center;
+}
+#popup .checkbox-box[checked] > span:nth-child(2) {
+    text-decoration: line-through;
+}
+
 #overlay.opened, #popup.opened {
     display: flex;
+}
+
+/* EDIT BOARD POPUP */
+#popup > div.edit-board {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%
+}
+#popup > div.edit-board > div:nth-of-type(1), #popup > div.edit-board > div:nth-of-type(2){
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+#popup > div.edit-board > div:nth-of-type(2)  div {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem
+}
+#popup > div.edit-board > div:nth-of-type(2) > div > div {
+    flex-direction: row;
+    align-items: center;
+}
+#popup > div.edit-board > div:nth-of-type(2) > div > div > span {
+    cursor: pointer;
+    padding: .125rem
+}
+
+/* DISPLAY TASK POPUP */
+#popup > div.display-task {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%
+}
+#popup > div.display-task > div:nth-of-type(1), #popup > div.display-task > div:nth-of-type(2) {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+#popup > div.display-task > div:nth-of-type(1) > div {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.btn {
+    border-radius: 999px;
+    padding: .75rem 1rem;
+    display: inline-flex;
+    place-content: center;
+    font-size: 0.81rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn.btn-primary {
+    background-color: var(--clr-primary);
+    color: var(--clr-headings)
+}
+.btn.btn-secondary {
+    background-color: var(--clr-headings);
+    color: var(--clr-primary)
 }

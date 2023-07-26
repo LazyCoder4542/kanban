@@ -176,7 +176,7 @@
                             "subtasks": [
                                 {
                                     "name": "Create clickable wireframe prototype in Balsamiq",
-                                    "isCompleted": false
+                                    "isCompleted": true
                                 }
                             ]
                         },

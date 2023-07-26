@@ -1,10 +1,10 @@
 interface Board {
     name: string,
-    columns: [Column]
+    columns: Column[] | any[]
 }
 interface Column {
     name: string,
-    tasks: [Task]
+    tasks: Task[]
 }
 interface Task {
     name: string,
@@ -14,24 +14,11 @@ interface Task {
     }]
 }
 class myApp {
-    board: Board = {
-        name: '',
-        columns: [{
-            name: '',
-            tasks: [{
-                name: '',
-                subtasks: [{
-                    name: '',
-                    isCompleted: false
-                }]
-            }]
-        }]
-    }
-    data: { boards:[Board] }
+    data: { boards: Board[] }
+    currentBoard: number = 0
     constructor(data: { boards:[Board] }) {
         this.data = data
         console.log(this.data);
-        this.board = this.getBoard("Platform Launch") as Board
         this.updateView()
         this.popupInit()
         this.insertColumnInit()
@@ -39,7 +26,7 @@ class myApp {
     generateNav() {
         let nav = document.querySelector('#nav-desktop') as HTMLUListElement
         nav.innerHTML = ""
-        this.data.boards.forEach(el => {
+        this.data.boards.forEach((el, id) => {
             let li = document.createElement('li')
             let span1 = document.createElement('span')
             let span2 = document.createElement('span')
@@ -47,22 +34,17 @@ class myApp {
             li.appendChild(span1)
             li.appendChild(span2)
             li.setAttribute('data-name', el.name)
-            if (el.name == this.board.name) {
+            if (id == this.currentBoard) {
                 li.className = "active"
             }
             else {
                 li.addEventListener('click', () => {
                     console.log(el.name);
-                    this.board = el
+                    this.currentBoard = id
                     this.updateView()
                 })
             }
-
-            let str = 
-            `<li ${el.name == this.board.name ? 'class="active"' : ""} data-name=${el.name}>
-                <span></span>
-                <span>${el.name}</span>
-            </li>`
+            li.setAttribute("data-id", `${id}`)
             nav.append(li)
         })
     }
@@ -72,46 +54,57 @@ class myApp {
     }
     getBoard(boardName: string) {
         //// FIND DATA
-        let currentBoard = this.data.boards.find(board => board.name == boardName)
-        return currentBoard
+        let index = this.data.boards.forEach((el, id) => {
+            console.log(id);
+            if (el.name === boardName) {
+                return id
+            }
+        })
+        return index
     }
     setBoard() {
+        let board = this.data.boards[this.currentBoard];
         //// UPDATE DOM
         
         // heading
-        (document.getElementById('board-name') as HTMLHeadingElement).innerText = this.board.name;
+        (document.getElementById('board-name') as HTMLHeadingElement).innerText = board.name;
 
         // columns
         let div = document.querySelector('.columns') as HTMLDivElement
         div.innerHTML = ""
-        for (let i = 0; i < this.board.columns.length; i++) {
-            const column = this.board.columns[i];
-            div.innerHTML += this.columnTemplate(column)
+        for (let i = 0; i < board.columns.length; i++) {
+            const column = board.columns[i];
+            div.appendChild(this.columnTemplate(column, i))
         }
     }
-    toggleBoard() {}
-    taskTemplate(obj: Task) {
+    taskTemplate(obj: Task, id: number, columnID: number) {
+        let div = document.createElement('div')
+        div.setAttribute("data-id", `${id}`)
         var str = 
-        `<div>
-            <h3>${obj.name}</h3>
-            <p>${obj.subtasks.filter(el => el.isCompleted == true).length} of ${obj.subtasks.length} ${obj.subtasks.length > 1 ? 'subtasks' : 'subtask'}</p>
-        </div>`;
-        return str;
+        `<h3>${obj.name}</h3>
+        <p>${obj.subtasks.filter(el => el.isCompleted == true).length} of ${obj.subtasks.length} ${obj.subtasks.length > 1 ? 'subtasks' : 'subtask'}</p>
+        `;
+        div.innerHTML = str
+        div.addEventListener('click', ()=> {
+            this.displayTaskPopup(columnID, id)
+        })
+        return div;
     }
-    columnTemplate(obj: Column) {
+    columnTemplate(obj: Column, id: number) {
+        let div = document.createElement('div')
+        div.className = "column"
         var str = 
-        `<div class="column">
-            <h2>
-                <span>${obj.name}</span>
-                <span>(${obj.tasks.length})</span>
-            </h2>
-            <div class="tasks">
-            ${
-                obj.tasks.map(task => this.taskTemplate(task)).join("")
-            }
-            </div>
+        `<h2>
+            <span>${obj.name}</span>
+            <span>(${obj.tasks.length})</span>
+        </h2>
+        <div class="tasks">
         </div>`
-        return str
+        div.innerHTML = str
+        obj.tasks.forEach((task, index) => {
+            div.querySelector('.tasks').appendChild(this.taskTemplate(task, index, id))
+        })
+        return div
     }
     popupInit() {
         let popup = document.createElement('div')
@@ -146,25 +139,225 @@ class myApp {
         })
     }
     editBoardPopup(type: "insert" | undefined = undefined) {
-        let popup = document.querySelector("#popup") as HTMLDivElement
+        let board = this.data.boards[this.currentBoard];
+        let popup = document.querySelector("#popup") as HTMLDivElement;
+        popup.innerHTML = this.editBoardPopupTemplate();
+        
+        board.columns.forEach((column, id) => {
+            let div = document.createElement('div')
+            let str = 
+            `<input class="input-box" value="${column.name}">
+            <span class="close">
+            <img src="./assets/icons/close.svg" />
+            </span>`
+            div.innerHTML = str
+            div.setAttribute('data-existing', `${id}`)
+            div.querySelector('.close').addEventListener('click', () => {
+                div.remove()
+            })
+            popup.querySelector('.input-container').appendChild(div)
+        })
+
+        popup.querySelector('#addNewColumn').addEventListener('click', ()=> {
+            this.addNewInputBox(popup.querySelector(".input-container"), "eg. Todo")
+        })
         if (type === "insert") {
-            popup.innerHTML = this.editBoardPopupTemplate()
+            this.addNewInputBox(popup.querySelector(".input-container"), "eg. Todo")
         }
+        popup.querySelector('#saveChanges').addEventListener('click', ()=> {
+            saveChanges();
+        })
         this.togglePopup("open")
+        const validateInput = () => {}
+        const saveChanges = () => {
+            let newBoard: Board = {
+                name: "",
+                columns: []
+            }
+
+            // change name            
+            let boardNameElem = popup.querySelector('#board-name') as HTMLInputElement
+            newBoard.name = boardNameElem.value
+
+            // columns
+            popup.querySelector('.input-container').querySelectorAll('input').forEach(input => {
+                if (input.value.trim() != "") {
+                    var eID = input.parentElement.getAttribute("data-existing") ? parseInt(input.parentElement.getAttribute("data-existing")) : null
+                    if (eID != null) {
+                        // rename existing columns
+                        if (input.value !== board.columns[eID].name) {
+                            newBoard.columns.push({
+                                ...board.columns[eID],
+                                name: input.value
+                            })
+                        }
+                        else {
+                            newBoard.columns.push({...board.columns[eID]})
+                        }
+                    }
+                    else newBoard.columns.push({name: input.value, tasks: []})
+                }
+            })
+            console.log(newBoard);
+            this.data.boards[this.currentBoard] = newBoard;
+
+            this.togglePopup("close")
+            this.updateView()
+        }
     }
-    editBoardPopupTemplate(type: "insert" | undefined = undefined) {
+    displayTaskPopup(columnID: number, taskID: number) {
+        let columns = this.data.boards[this.currentBoard].columns;
+        let task: Task = columns[columnID].tasks[taskID]
+        let popup = document.querySelector("#popup") as HTMLDivElement;
+        popup.innerHTML = this.displayTaskPopupTemplate(columnID, taskID);
+        
+        // GENERATE SUBTASKS
+        
+        task.subtasks.forEach((subtask, id) => {
+            let checkbox = this.generateCheckbox(subtask.name, subtask.isCompleted)
+            checkbox.addEventListener('click', ()=> {
+                if (this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted) {
+                    checkbox.removeAttribute("checked")
+                    this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted = false
+                }
+                else {
+                    checkbox.setAttribute("checked", "")
+                    this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted = true
+                }
+                this.updateView()
+            })
+            popup.querySelector(".checkbox-container").appendChild(checkbox)
+        })
+
+        // SWITCH STATUS (COLUMN)
+
+        
+
+
+        // board.columns.forEach((column, id) => {
+        //     let div = document.createElement('div')
+        //     let str = 
+        //     `<input class="input-box" value="${column.name}"">
+        //     <span class="close">
+        //     <img src="./assets/icons/close.svg" />
+        //     </span>`
+        //     div.innerHTML = str
+        //     div.setAttribute('data-existing', `${id}`)
+        //     div.querySelector('.close').addEventListener('click', () => {
+        //         div.remove()
+        //     })
+        //     popup.querySelector('.input-container').appendChild(div)
+        // })
+
+        this.togglePopup("open")
+
+        // const validateInput = () => {}
+        // const saveChanges = () => {
+        //     let newBoard: Board = {
+        //         name: "",
+        //         columns: []
+        //     }
+
+        //     // change name            
+        //     let boardNameElem = popup.querySelector('#board-name') as HTMLInputElement
+        //     newBoard.name = boardNameElem.value
+
+        //     // columns
+        //     popup.querySelector('.input-container').querySelectorAll('input').forEach(input => {
+        //         if (input.value.trim() != "") {
+        //             var eID = input.parentElement.getAttribute("data-existing") ? parseInt(input.parentElement.getAttribute("data-existing")) : null
+        //             if (eID != null) {
+        //                 // rename existing columns
+        //                 if (input.value !== board.columns[eID].name) {
+        //                     newBoard.columns.push({
+        //                         ...board.columns[eID],
+        //                         name: input.value
+        //                     })
+        //                 }
+        //                 else {
+        //                     newBoard.columns.push({...board.columns[eID]})
+        //                 }
+        //             }
+        //             else newBoard.columns.push({name: input.value, tasks: []})
+        //         }
+        //     })
+        //     console.log(newBoard);
+        //     this.data.boards[this.currentBoard] = newBoard;
+
+        //     this.togglePopup("close")
+        //     this.updateView()
+        // }
+    }
+    editBoardPopupTemplate() {
+        let board = this.data.boards[this.currentBoard];
         let str = 
-        `<div>
+        `<div class="edit-board">
             <h1>Edit Board</h1>
             <div>
                 <h2>Board Name</h2>
-                <div class="input-box">${this.board.name}</div>
+                <input class="input-box" value="${board.name}" id="board-name">
+            </div>
+            <div>
+                <h2>Board Columns</h2>
+                <div class="input-container">
+                </div>
+            </div>
+            <div class="btn btn-secondary" id="addNewColumn">
+                    + Add New Column
+            </div>
+            <div class="btn btn-primary" id="saveChanges">
+                    Save Changes
+            </div>
+        </div>`
+        return str
+    }
+    displayTaskPopupTemplate(columnID: number, taskID: number) {
+        let columns = this.data.boards[this.currentBoard].columns;
+        let task: Task = columns[columnID].tasks[taskID]
+        let str = 
+        `<div class="display-task">
+            <header>
+                <h1>${task.name}</h1>
+            </header>
+            <div>
+                <h2>Subtasks (${task.subtasks.filter(el => el.isCompleted == true).length} of ${task.subtasks.length})</h2>
+                <div class="checkbox-container">
+                </div>
+            </div>
+            <div>
+                <h2>Current Status</h2>
+                <div class="select-container">
+                </div>
             </div>
         </div>`
         return str
     }
     insertColumnPopup() {
         this.editBoardPopup("insert")
+    }
+    addNewInputBox(inputContainer: HTMLDivElement, inputPlaceholder: string) {
+        let div = document.createElement('div')
+        let str = 
+        `<input class="input-box" placeholder="${inputPlaceholder}">
+        <span class="close">
+        <img src="./assets/icons/close.svg" />
+        </span>`
+        div.innerHTML = str
+        div.querySelector('.close').addEventListener('click', () => {
+            div.remove()
+        })
+        inputContainer.appendChild(div)
+
+    }
+    generateCheckbox(name: string, isChecked: boolean) {
+        let div = document.createElement('div')
+        div.className = "checkbox-box";
+        if (isChecked) div.setAttribute("checked", "")
+        let str =
+        `<span></span>
+        <span>${name}</span>`
+        div.innerHTML = str
+        return div
     }
 }
 var app;
