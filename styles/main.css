@@ -272,12 +272,16 @@ main {
     border-radius: .25rem;
     background-color: transparent;
     border: 1px solid rgba(130, 143, 163, 0.25);
+    display: inline-flex;
+    align-items: center;
     color: var(--clr-headings);
     width: 100%;
-    outline: transparent !important;
+    /* outline: transparent !important; */
+    outline-color: var(--clr-headings);
+    outline-width: 1px !important;
     text-transform: capitalize;
 }
-#popup .input-box:focus {
+#popup .input-box:hover {
     border-color: var(--clr-primary)
 }
 #popup .checkbox-box {
@@ -310,6 +314,33 @@ main {
 }
 #popup .checkbox-box[checked] > span:nth-child(2) {
     text-decoration: line-through;
+}
+#popup .option-box > .input-box {
+    justify-content: space-between;
+}
+#popup .option-box > .input-box > span:nth-child(2) {
+    color: var(--clr-primary);
+}
+#popup .option-box > .options {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--clr-background);
+    font-size: 0.81rem;
+    text-transform: capitalize;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+#popup .option-box > .options > span {
+    padding: .5rem 1rem;
+
+}
+#popup .option-box > .options > span:hover {
+    background-color: var(--clr-primary);
+}
+#popup svg {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 0;
 }
 
 #overlay.opened, #popup.opened {

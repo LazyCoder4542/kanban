@@ -175,7 +175,7 @@ class myApp {
         let popup = document.querySelector("#popup");
         popup.innerHTML = this.displayTaskPopupTemplate(columnID, taskID);
         task.subtasks.forEach((subtask, id) => {
-            let checkbox = this.generateCheckbox(subtask.name, subtask.isCompleted);
+            let checkbox = this.generateCheckBox(subtask.name, subtask.isCompleted);
             checkbox.addEventListener('click', () => {
                 if (this.data.boards[this.currentBoard].columns[columnID].tasks[taskID].subtasks[id].isCompleted) {
                     checkbox.removeAttribute("checked");
@@ -189,6 +189,19 @@ class myApp {
             });
             popup.querySelector(".checkbox-container").appendChild(checkbox);
         });
+        let elem = popup.querySelector('.select-container');
+        let optionBox = this.generateOptionBox(columns.map((column, id) => { return { name: column.name, id }; }), columnID);
+        optionBox.querySelector('.options').querySelectorAll("span").forEach((el) => {
+            if (el.getAttribute("data-id") ? parseInt(el.getAttribute("data-id")) != columnID : false) {
+                el.addEventListener("click", () => {
+                    this.data.boards[this.currentBoard].columns[parseInt(el.getAttribute("data-id"))].tasks.push(this.data.boards[this.currentBoard].columns[columnID].tasks[taskID]);
+                    this.data.boards[this.currentBoard].columns[columnID].tasks.splice(taskID, 1);
+                    this.togglePopup("close");
+                    this.updateView();
+                });
+            }
+        });
+        elem.appendChild(optionBox);
         this.togglePopup("open");
     }
     editBoardPopupTemplate() {
@@ -248,13 +261,30 @@ class myApp {
         });
         inputContainer.appendChild(div);
     }
-    generateCheckbox(name, isChecked) {
+    generateCheckBox(name, isChecked) {
         let div = document.createElement('div');
         div.className = "checkbox-box";
         if (isChecked)
             div.setAttribute("checked", "");
         let str = `<span></span>
         <span>${name}</span>`;
+        div.innerHTML = str;
+        return div;
+    }
+    generateOptionBox(arr, id) {
+        let div = document.createElement('div');
+        div.className = "option-box";
+        let str = `<div class="input-box" tabIndex="0">
+        <span>${arr[id].name}</span>
+        <span>
+        <svg height="20" width="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"></path></svg>
+        </span>
+        </div>
+        <div class="options">
+            ${arr.map((obj, index) => {
+            return `<span data-id="${index}">${obj.name}</span>`;
+        }).join("")}
+        </div>`;
         div.innerHTML = str;
         return div;
     }
