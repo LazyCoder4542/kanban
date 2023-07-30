@@ -54,6 +54,9 @@ body {
 .container.side-bar-opened #hideSideBar {
     visibility: visible;
 }
+#addTask::after {
+    content: "+ Add New Task";
+}
 #showSideBar {
     position: absolute;
     left: 0;
@@ -270,10 +273,11 @@ main {
     font-size: 0.94rem; 
     margin-left: calc(-1 * var(--padding));
     padding: .75rem 2rem;
-    display: block;
+    display: in line-flex;
     border-radius: 0 999px 999px 0;
     font-weight: 700;
     cursor: pointer;
+    gap: 1rem;
 }
 .menu > .boards > div > ul > li:not(.active):hover, .menu > .boards > div > span:hover, #hideSideBar:hover {
         background-color: var(--clr-headings);
@@ -591,6 +595,12 @@ main {
 @media screen and (max-width: 540px) {
     :root {
         --padding: 1rem;
+        --header-width: 5rem;
+    }
+    #addTask::after {
+        content: "+";
+        font-size: 200%;
+        font-family: sans-serif
     }
     #showSideBar, div#hideSideBar {
         display: none;
@@ -619,5 +629,14 @@ main {
     }
     main {
         margin-left: 0 !important;
+    }
+
+    #popup {
+        width: 80%;
+        padding: 1rem;
+    }
+
+    .btn {
+        padding: .5rem 1.25rem;
     }
 }
