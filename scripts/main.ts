@@ -8,27 +8,123 @@ interface Column {
 }
 interface Task {
     name: string,
-    subtasks: [{
+    subtasks: {
         name: string,
         isCompleted: boolean
-    }]
+    }[] | any[]
 }
 class myApp {
     data: { boards: Board[] }
     currentBoard: number = 0
+    mql: MediaQueryList
     constructor(data: { boards:[Board] }) {
         this.data = data
         console.log(this.data);
+        this.mql = window.matchMedia("(max-width: 540px)");
         this.updateView()
         this.popupInit()
         this.insertColumnInit()
+        this.headerMenuInit()
+        this.toggleSideBarInit()
+        document.addEventListener('keyup', (ev)=> {
+            if (ev.key == "Escape") {
+                this.togglePopup("close")
+            }
+        })
+        this.mql.addEventListener("change", ()=> {
+            this.updateView()
+            
+        })
+        if (!this.mql) document.querySelector('.container').classList.add('side-bar-opened')
     }
-    generateNav() {
-        let nav = document.querySelector('#nav-desktop') as HTMLUListElement
-        nav.innerHTML = ""
+    generateMenuNav() {
+        let side = document.querySelector('.side') as HTMLDivElement
+        let popup = document.querySelector("#popup") as HTMLDivElement;
+        let div = document.createElement('div')
+        div.innerHTML = `<div class="boards">
+        <h2>ALL BOARDS (${this.data.boards.length})</h2>
+        <div>
+        <ul id="nav-desktop"></ul>
+          <span id="createNewBoard">&plus; Create New Board</span>
+        </div>
+        </div>
+        <div class="theme">
+            <div class="sun">
+            <img src="./assets/icons/sun.svg" alt="sun" />
+            </div>
+            <div class="toggle">
+            <span></span>
+            </div>
+            <div class="moon">
+            <img src="./assets/icons/moon.svg" alt="moon" />
+            </div>
+        </div>`
+        let elem = div.querySelector('#createNewBoard')
+        elem.addEventListener('click',()=> {
+            this.newBoardPopup()
+        })
+        let ul = div.querySelector('#nav-desktop')
+        ul.innerHTML = ""
         this.data.boards.forEach((el, id) => {
             let li = document.createElement('li')
             let span1 = document.createElement('span')
+            span1.innerHTML = `
+            <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                <svg
+                xmlns:dc="http://purl.org/dc/elements/1.1/"
+                xmlns:cc="http://creativecommons.org/ns#"
+                xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                xmlns:svg="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+                width="16"
+                height="16"
+                version="1.1"
+                id="svg4"
+                sodipodi:docname="icon-board-white.svg"
+                inkscape:version="1.0.2 (e86c870879, 2021-01-15)">
+                <metadata
+                id="metadata10">
+                <rdf:RDF>
+                <cc:Work
+                        rdf:about="">
+                        <dc:format>image/svg+xml</dc:format>
+                        <dc:type
+                        rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+                        <dc:title></dc:title>
+                    </cc:Work>
+                    </rdf:RDF>
+                </metadata>
+                <defs
+                id="defs8" />
+                <sodipodi:namedview
+                pagecolor="#ffffff"
+                bordercolor="#666666"
+                    borderopacity="1"
+                    objecttolerance="10"
+                    gridtolerance="10"
+                    guidetolerance="10"
+                    inkscape:pageopacity="0"
+                    inkscape:pageshadow="2"
+                    inkscape:window-width="1882"
+                    inkscape:window-height="1367"
+                    id="namedview6"
+                    showgrid="false"
+                    inkscape:zoom="63"
+                    inkscape:cx="8"
+                    inkscape:cy="8"
+                    inkscape:window-x="26"
+                    inkscape:window-y="23"
+                    inkscape:window-maximized="0"
+                    inkscape:current-layer="svg4" />
+                    <path
+                    d="M0 2.889A2.889 2.889 0 0 1 2.889 0H13.11A2.889 2.889 0 0 1 16 2.889V13.11A2.888 2.888 0 0 1 13.111 16H2.89A2.889 2.889 0 0 1 0 13.111V2.89Zm1.333 5.555v4.667c0 .859.697 1.556 1.556 1.556h6.889V8.444H1.333Zm8.445-1.333V1.333h-6.89A1.556 1.556 0 0 0 1.334 2.89V7.11h8.445Zm4.889-1.333H11.11v4.444h3.556V5.778Zm0 5.778H11.11v3.11h2a1.556 1.556 0 0 0 1.556-1.555v-1.555Zm0-7.112V2.89a1.555 1.555 0 0 0-1.556-1.556h-2v3.111h3.556Z"
+                    fill="currentColor"
+                    id="path2"/>
+                </svg>
+
+            `;
             let span2 = document.createElement('span')
             span2.innerText = el.name
             li.appendChild(span1)
@@ -45,11 +141,19 @@ class myApp {
                 })
             }
             li.setAttribute("data-id", `${id}`)
-            nav.append(li)
+            ul.append(li)
         })
+        if (this.mql.matches) {
+            popup.innerHTML = ""
+            popup.append(...div.childNodes)
+        }
+        else {
+            side.innerHTML = ""
+            side.append(...div.childNodes)
+        }
     }
     updateView() {
-        this.generateNav()
+        this.generateMenuNav()
         this.setBoard()
     }
     getBoard(boardName: string) {
@@ -138,30 +242,32 @@ class myApp {
             this.insertColumnPopup()
         })
     }
-    editBoardPopup(type: "insert" | undefined = undefined) {
+    editBoardPopup(type: "insert" | "new" | undefined = undefined) {
         let board = this.data.boards[this.currentBoard];
         let popup = document.querySelector("#popup") as HTMLDivElement;
-        popup.innerHTML = this.editBoardPopupTemplate();
+        popup.innerHTML = this.editBoardPopupTemplate(type);
         
-        board.columns.forEach((column, id) => {
-            let div = document.createElement('div')
-            let str = 
-            `<input class="input-box" value="${column.name}">
-            <span class="close">
-            <img src="./assets/icons/close.svg" />
-            </span>`
-            div.innerHTML = str
-            div.setAttribute('data-existing', `${id}`)
-            div.querySelector('.close').addEventListener('click', () => {
-                div.remove()
+        if (type != "new"){
+            board.columns.forEach((column, id) => {
+                let div = document.createElement('div')
+                let str = 
+                `<input class="input-box" value="${column.name}">
+                <span class="close">
+                <img src="./assets/icons/close.svg" />
+                </span>`
+                div.innerHTML = str
+                div.setAttribute('data-existing', `${id}`)
+                div.querySelector('.close').addEventListener('click', () => {
+                    div.remove()
+                })
+                popup.querySelector('.input-container').appendChild(div)
             })
-            popup.querySelector('.input-container').appendChild(div)
-        })
+        }
 
         popup.querySelector('#addNewColumn').addEventListener('click', ()=> {
             this.addNewInputBox(popup.querySelector(".input-container"), "eg. Todo")
         })
-        if (type === "insert") {
+        if (type === "insert" || type === 'new') {
             this.addNewInputBox(popup.querySelector(".input-container"), "eg. Todo")
         }
         popup.querySelector('#saveChanges').addEventListener('click', ()=> {
@@ -198,8 +304,8 @@ class myApp {
                     else newBoard.columns.push({name: input.value, tasks: []})
                 }
             })
-            console.log(newBoard);
-            this.data.boards[this.currentBoard] = newBoard;
+            if (type === 'new') this.data.boards.push(newBoard)
+            else this.data.boards[this.currentBoard] = newBoard;
 
             this.togglePopup("close")
             this.updateView()
@@ -233,6 +339,17 @@ class myApp {
         let elem = popup.querySelector('.select-container')
         let optionBox = this.generateOptionBox(columns.map((column, id) => {return {name: column.name, id}}), columnID)
         
+        optionBox.querySelector('.input-box').addEventListener('click', ()=> {
+            let r = document.querySelector('.options') as HTMLDivElement;
+            if (optionBox.classList.contains('opened')) {
+                optionBox.classList.remove('opened')
+                r.style.height = "0"
+            } else {
+                optionBox.classList.add('opened')
+                r.style.height = 2 * columns.length + 'rem'
+            }
+        })
+
         optionBox.querySelector('.options').querySelectorAll("span").forEach((el)=>{
             if (el.getAttribute("data-id") ? parseInt(el.getAttribute("data-id")) != columnID : false) {
                 el.addEventListener("click", ()=>{
@@ -243,18 +360,134 @@ class myApp {
                 })
             }
         })
+
+        // menu
+
+        let menu = document.querySelector('.popup-menu')
+        const toggleMenu = (str: string | null = null) => {
+            if (str == "close") {
+                menu.classList.remove("opened")
+            }
+            else if (str == "open") {
+                menu.classList.add("opened")
+            }
+            else {
+                if (menu.classList.contains("opened")) {
+                    menu.classList.remove("opened")
+                }
+                else {
+                    menu.classList.add("opened")
+                }
+            }
+        }
+        
+        menu.querySelector('#togglePopupMenu').addEventListener("click", ()=> {
+            toggleMenu()
+        })
+
+        menu.querySelector('#editTask').addEventListener("click", () => {
+            toggleMenu("close")
+            this.addTaskPopup({columnID, taskID})
+
+        })
+        // menu.querySelector('#deleteTask').addEventListener("click", () => {
+        //     toggleMenu("close")
+        //     this.deleteTask()
+        // })
         
         elem.appendChild(optionBox)
         this.togglePopup("open")
     }
-    editBoardPopupTemplate() {
+    addTaskPopup(edit?: {columnID: number, taskID: number}) {
+        let columns: Column[] = this.data.boards[this.currentBoard].columns;
+        let task = edit ? columns[edit.columnID].tasks[edit.taskID] : null
+        let popup = document.querySelector("#popup") as HTMLDivElement;
+        popup.innerHTML = this.addTaskPopupTemplate(edit);
+
+        popup.querySelector('#addNewSubtask').addEventListener('click', ()=> {
+            this.addNewInputBox(popup.querySelector(".input-container"), "eg. Make coffee")
+        })
+
+        if (task) task.subtasks.forEach((el, id) => this.addNewInputBox(popup.querySelector(".input-container"), "eg. Make coffee", el.name, id))
+
+        this.addNewInputBox(popup.querySelector(".input-container"), "eg. Make coffee")
+
+        // STATUS (COLUMN)
+        let elem = popup.querySelector('.select-container')
+        let optionBox = this.generateOptionBox(columns.map((column, id) => {return {name: column.name, id}}), edit ? edit.columnID : 0)
+        
+        const toggleDrop = () => {
+            let r = document.querySelector('.options') as HTMLDivElement
+            if (optionBox.classList.contains('opened')) {
+                optionBox.classList.remove('opened')
+                r.style.height = "0"
+            } else {
+                optionBox.classList.add('opened')
+                r.style.height = 2 * columns.length + 'rem'
+            }
+        }
+        optionBox.querySelector('.input-box').addEventListener('click', toggleDrop)
+
+        optionBox.querySelector('.options').querySelectorAll("span").forEach((el, id)=>{
+            el.addEventListener("click", ()=>{
+                if (el.getAttribute("data-id") ? parseInt(el.getAttribute("data-id")) != parseInt(optionBox.getAttribute("data-id")) : false) {
+                    optionBox.setAttribute("data-id", `${id}`)
+                    optionBox.querySelector('.input-box').querySelector('span').innerText = columns[id].name;
+                    toggleDrop()
+                }
+            })
+        })
+        elem.appendChild(optionBox)
+        
+        popup.querySelector('#saveChanges').addEventListener('click', ()=> {
+            saveChanges();
+        })
+        
+        this.togglePopup("open")
+        
+        const saveChanges = () => {
+            let newTask: Task = {
+                name: "",
+                subtasks: [],
+            }
+            newTask = {
+                ...newTask,
+                // change name            
+                name: (popup.querySelector('#board-name') as HTMLInputElement).value.trim(),
+                // subtasks
+                subtasks: Array.from(popup.querySelector('.input-container').querySelectorAll('input')).filter( input => input.value.trim() != "").map(input => {
+                    return {
+                        name: input.value.trim().charAt(0).toUpperCase() + input.value.trim().slice(1),
+                        isCompleted: input.getAttribute("data-id") ? task.subtasks[parseInt(input.getAttribute("data-id"))].isCompleted : false
+                    }
+                })
+            }
+            console.log(newTask);
+            if (edit){
+                if (parseInt(optionBox.getAttribute("data-id")) == edit.columnID) {
+                    this.data.boards[this.currentBoard].columns[edit.columnID].tasks[edit.taskID] = newTask
+                }
+                else {
+                    this.data.boards[this.currentBoard].columns[parseInt(optionBox.getAttribute("data-id"))].tasks.push(newTask)
+                    this.data.boards[this.currentBoard].columns[edit.columnID].tasks.splice(edit.taskID, 1)
+                }
+            }
+            else this.data.boards[this.currentBoard].columns[parseInt(optionBox.getAttribute("data-id"))].tasks.push(newTask)
+            this.togglePopup("close")
+            this.updateView()
+        }
+    }
+    newBoardPopup() {
+        this.editBoardPopup("new")
+    }
+    editBoardPopupTemplate(type?: string) {
         let board = this.data.boards[this.currentBoard];
         let str = 
         `<div class="edit-board">
-            <h1>Edit Board</h1>
+            <h1>${type === 'new' ? 'Add New Board' : 'Edit Board'}</h1>
             <div>
                 <h2>Board Name</h2>
-                <input class="input-box" value="${board.name}" id="board-name">
+                <input class="input-box" value="${type === 'new' ? '' : board.name}" id="board-name" placeholder="e.g. Web Design">
             </div>
             <div>
                 <h2>Board Columns</h2>
@@ -277,6 +510,15 @@ class myApp {
         `<div class="display-task">
             <header>
                 <h1>${task.name}</h1>
+                <div class="popup-menu">
+                    <span id="togglePopupMenu">
+                        <img src="assets/icons/vertical-ellipsis.svg">
+                    </span>
+                    <span>
+                        <span id="editTask">Edit Task</span>
+                        <span id="deleteTask">Delete Task</span>
+                    </span>
+                </div>
             </header>
             <div>
                 <h2>Subtasks (${task.subtasks.filter(el => el.isCompleted == true).length} of ${task.subtasks.length})</h2>
@@ -291,13 +533,46 @@ class myApp {
         </div>`
         return str
     }
+    addTaskPopupTemplate(edit?: {columnID: number, taskID: number}) {
+        let columns: Column[] = this.data.boards[this.currentBoard].columns;
+        let task = edit ? columns[edit.columnID].tasks[edit.taskID] : null
+        let str = 
+        `<div class="add-task">
+            <h1>${task ? "Edit task" : "Add New Task"}</h1>
+            <div>
+                <h2>Title</h2>
+                <input class="input-box" id="board-name" placeholder="e.g. Take a coffee break" ${task ? `value="${task.name}"` : ""}>
+            </div>
+            <div>
+                <h2>Description</h2>
+                <textarea class="input-box" id="board-description" rows="5" placeholder="e.g. It's always good to take a break. This 15-minute break will recharge the batteries a little."></textarea>
+            </div>
+            <div>
+                <h2>Subtasks</h2>
+                <div class="input-container">
+                </div>
+            </div>
+            <div class="btn btn-secondary" id="addNewSubtask">
+                    + Add New Column
+            </div>
+            <div>
+                <h2>Current Status</h2>
+                <div class="select-container">
+                </div>
+            </div>
+            <div class="btn btn-primary" id="saveChanges">
+                    Save Changes
+            </div>
+        </div>`
+        return str
+    }
     insertColumnPopup() {
         this.editBoardPopup("insert")
     }
-    addNewInputBox(inputContainer: HTMLDivElement, inputPlaceholder: string) {
+    addNewInputBox(inputContainer: HTMLDivElement, inputPlaceholder: string, inputValue?: string, inputID?: number) {
         let div = document.createElement('div')
         let str = 
-        `<input class="input-box" placeholder="${inputPlaceholder}">
+        `<input class="input-box" placeholder="${inputPlaceholder}" ${inputValue ? `value="${inputValue}"` : ""} ${inputID != undefined ? `data-id="${inputID}"` : ""}>
         <span class="close">
         <img src="./assets/icons/close.svg" />
         </span>`
@@ -321,6 +596,7 @@ class myApp {
     generateOptionBox(arr: {name: string, id: number}[],id: number) {
         let div = document.createElement('div')
         div.className = "option-box";
+        div.setAttribute('data-id', `${id}`)
         let str =
         `<div class="input-box" tabIndex="0">
         <span>${arr[id].name}</span>
@@ -335,6 +611,57 @@ class myApp {
         </div>`;
         div.innerHTML = str
         return div;
+    }
+    headerMenuInit() {
+        let elem = document.querySelector('.header-menu')
+        const toggleMenu = (str: string | null = null) => {
+            if (str == "close") {
+                elem.classList.remove("opened")
+            }
+            else if (str == "open") {
+                elem.classList.add("opened")
+            }
+            else {
+                if (elem.classList.contains("opened")) {
+                    elem.classList.remove("opened")
+                }
+                else {
+                    elem.classList.add("opened")
+                }
+            }
+        }
+        
+        elem.querySelector('#toggleMenu').addEventListener("click", ()=> {
+            toggleMenu()
+        })
+
+        elem.querySelector('#editBoard').addEventListener("click", () => {
+            toggleMenu("close")
+            this.editBoardPopup()
+        })
+        elem.querySelector('#deleteBoard').addEventListener("click", () => {
+            toggleMenu("close")
+            this.deleteBoard()
+        })
+        document.querySelector("#addTask").addEventListener("click", ()=> {
+            this.addTaskPopup()
+        })
+    }
+    deleteBoard() {
+        this.data.boards.splice(this.currentBoard, 1)
+        if (this.currentBoard >= this.data.boards.length) {
+            this.currentBoard = this.data.boards.length - 1
+        }
+        this.updateView()
+    }
+    toggleSideBarInit()  {
+        let elem = document.querySelector('.container')
+        elem.querySelector('#showSideBar').addEventListener('click', ()=> {
+            elem.classList.add('side-bar-opened')
+        })
+        elem.querySelector('#hideSideBar').addEventListener('click', ()=> {
+            elem.classList.remove('side-bar-opened')
+        })
     }
 
 }

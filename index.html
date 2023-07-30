@@ -13,28 +13,18 @@
         <div>
           <div>
             <div class="icon">
-              <img src="./assets/icons/logo-dark.svg" alt="logo" />
+              <div class="desktop">
+                <img src="./assets/icons/logo-dark.svg" alt="logo" />
+              </div>
+              <div class="mobile">
+                <img src="./assets/icons/logo-mini.svg" alt="logo" />
+              </div>
             </div>
             <div class="side">
-              <div class="boards">
-                <h2>ALL BOARDS (3)</h2>
-                <ul id="nav-desktop"></ul>
-              </div>
-              <div class="theme">
-                <div class="sun">
-                  <img src="./assets/icons/sun.svg" alt="sun" />
-                </div>
-                <div class="toggle">
-                  <span></span>
-                </div>
-                <div class="moon">
-                  <img src="./assets/icons/moon.svg" alt="moon" />
-                </div>
-              </div>
             </div>
-            <div>
+            <div id="hideSideBar">
               <span>
-                <img src="./assets/icons/eye.svg" alt="eye-icon" />
+                <img src="./assets/icons/eye-hide.svg" alt="eye-hide" />
               </span>
               <span>Hide Sidebar</span>
             </div>
@@ -42,7 +32,16 @@
         </div>
         <div>
           <h1 id="board-name">Platform Launch</h1>
-          <div class="btn btn-primary">&plus; Add New Task</div>
+          <div class="btn btn-primary" id="addTask">&plus; Add New Task</div>
+          <div class="header-menu">
+            <span id="toggleMenu">
+              <img src="assets/icons/vertical-ellipsis.svg" alt="">
+            </span>
+            <span>
+              <span id="editBoard">Edit Board</span>
+              <span id="deleteBoard">Delete Board</span>
+            </span>
+          </div>
         </div>
       </header>
       <main>
@@ -54,6 +53,9 @@
           </div>
         </div>
       </main>
+      <span id="showSideBar">
+        <img src="assets/icons/eye-show.svg" alt="eye-show">
+      </span>
     </div>
   </body>
   <script src="scripts/main.js"></script>
