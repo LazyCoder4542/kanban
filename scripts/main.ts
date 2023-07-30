@@ -17,12 +17,14 @@ class myApp {
     data: { boards: Board[] }
     currentBoard: number = 0
     mql: MediaQueryList
+    currentPopup: string
+    menuController: AbortController = new AbortController
     constructor(data: { boards:[Board] }) {
         this.data = data
         console.log(this.data);
         this.mql = window.matchMedia("(max-width: 540px)");
-        this.updateView()
         this.popupInit()
+        this.updateView()
         this.insertColumnInit()
         this.headerMenuInit()
         this.toggleSideBarInit()
@@ -32,15 +34,18 @@ class myApp {
             }
         })
         this.mql.addEventListener("change", ()=> {
+            if (this.mql.matches) this.menuController = new AbortController();
             this.updateView()
             
         })
-        if (!this.mql) document.querySelector('.container').classList.add('side-bar-opened')
+        if (!this.mql.matches) document.querySelector('.container').classList.add('side-bar-opened')
     }
     generateMenuNav() {
-        let side = document.querySelector('.side') as HTMLDivElement
+        let side = document.querySelector('.menu') as HTMLDivElement
         let popup = document.querySelector("#popup") as HTMLDivElement;
+
         let div = document.createElement('div')
+        div.className = "menu"
         div.innerHTML = `<div class="boards">
         <h2>ALL BOARDS (${this.data.boards.length})</h2>
         <div>
@@ -137,6 +142,7 @@ class myApp {
                 li.addEventListener('click', () => {
                     console.log(el.name);
                     this.currentBoard = id
+                    if (this.mql.matches) this.togglePopup("close")
                     this.updateView()
                 })
             }
@@ -144,11 +150,18 @@ class myApp {
             ul.append(li)
         })
         if (this.mql.matches) {
-            popup.innerHTML = ""
-            popup.append(...div.childNodes)
+            document.querySelector('#board-name').addEventListener('click', ()=>{
+                popup.innerHTML = ""
+                popup.appendChild(div)
+                this.togglePopup("open")
+                document.querySelector(".container").classList.add("side-bar-opened")
+            }, {signal: this.menuController.signal})
+
         }
         else {
-            side.innerHTML = ""
+            this.menuController.abort()
+            this.togglePopup("close")
+            side.innerHTML = "";
             side.append(...div.childNodes)
         }
     }
@@ -224,15 +237,18 @@ class myApp {
     togglePopup(status: "open" | "close") {
         let overlay = document.querySelector("#overlay")
         let popup = document.querySelector("#popup")
-        
         if (overlay && popup) {
             if (status === "open") {
                 overlay.className = "opened"
                 popup.className = "opened"
+                this.currentPopup = popup.querySelector('div').className
             }
             else {
                 overlay.className = ""
                 popup.className = ""
+                if (this.currentPopup === "menu" && this.mql.matches) {
+                    document.querySelector(".container").classList.remove("side-bar-opened")
+                }
             }
         }
     }
@@ -663,6 +679,12 @@ class myApp {
             elem.classList.remove('side-bar-opened')
         })
     }
+    // toggleMobileMenu() {
+    //     popup.innerHTML = ""
+    //             popup.appendChild(div)
+    //             this.togglePopup("open")
+    //             document.querySelector(".container").classList.add("side-bar-opened")
+    // }
 
 }
 var app;

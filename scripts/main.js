@@ -1,11 +1,12 @@
 class myApp {
     constructor(data) {
         this.currentBoard = 0;
+        this.menuController = new AbortController;
         this.data = data;
         console.log(this.data);
         this.mql = window.matchMedia("(max-width: 540px)");
-        this.updateView();
         this.popupInit();
+        this.updateView();
         this.insertColumnInit();
         this.headerMenuInit();
         this.toggleSideBarInit();
@@ -15,15 +16,18 @@ class myApp {
             }
         });
         this.mql.addEventListener("change", () => {
+            if (this.mql.matches)
+                this.menuController = new AbortController();
             this.updateView();
         });
-        if (!this.mql)
+        if (!this.mql.matches)
             document.querySelector('.container').classList.add('side-bar-opened');
     }
     generateMenuNav() {
-        let side = document.querySelector('.side');
+        let side = document.querySelector('.menu');
         let popup = document.querySelector("#popup");
         let div = document.createElement('div');
+        div.className = "menu";
         div.innerHTML = `<div class="boards">
         <h2>ALL BOARDS (${this.data.boards.length})</h2>
         <div>
@@ -120,6 +124,8 @@ class myApp {
                 li.addEventListener('click', () => {
                     console.log(el.name);
                     this.currentBoard = id;
+                    if (this.mql.matches)
+                        this.togglePopup("close");
                     this.updateView();
                 });
             }
@@ -127,10 +133,16 @@ class myApp {
             ul.append(li);
         });
         if (this.mql.matches) {
-            popup.innerHTML = "";
-            popup.append(...div.childNodes);
+            document.querySelector('#board-name').addEventListener('click', () => {
+                popup.innerHTML = "";
+                popup.appendChild(div);
+                this.togglePopup("open");
+                document.querySelector(".container").classList.add("side-bar-opened");
+            }, { signal: this.menuController.signal });
         }
         else {
+            this.menuController.abort();
+            this.togglePopup("close");
             side.innerHTML = "";
             side.append(...div.childNodes);
         }
@@ -203,10 +215,14 @@ class myApp {
             if (status === "open") {
                 overlay.className = "opened";
                 popup.className = "opened";
+                this.currentPopup = popup.querySelector('div').className;
             }
             else {
                 overlay.className = "";
                 popup.className = "";
+                if (this.currentPopup === "menu" && this.mql.matches) {
+                    document.querySelector(".container").classList.remove("side-bar-opened");
+                }
             }
         }
     }
