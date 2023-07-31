@@ -28,6 +28,9 @@ class myApp {
         this.insertColumnInit()
         this.headerMenuInit()
         this.toggleSideBarInit()
+
+        this.toggleThemeInit()
+
         document.addEventListener('keyup', (ev)=> {
             if (ev.key == "Escape") {
                 this.togglePopup("close")
@@ -113,13 +116,19 @@ class myApp {
             <div class="sun">
             <img src="./assets/icons/sun.svg" alt="sun" />
             </div>
-            <div class="toggle">
+            <div class="toggle" id="toggleTheme">
             <span></span>
             </div>
             <div class="moon">
             <img src="./assets/icons/moon.svg" alt="moon" />
             </div>
         </div>`
+        div.querySelector('#toggleTheme').addEventListener('click', function() {
+            var currentTheme = document.documentElement.dataset.theme;
+            var newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.dataset.theme = newTheme;
+            localStorage.setItem('theme', newTheme);
+        })
         let elem = div.querySelector('#createNewBoard')
         elem.addEventListener('click',()=> {
             this.newBoardPopup()
@@ -634,7 +643,7 @@ class myApp {
                 </div>
             </div>
             <div class="btn btn-secondary" id="addNewSubtask">
-                    + Add New Column
+                    + Add New Subtask
             </div>
             <div>
                 <h2>Current Status</h2>
@@ -744,12 +753,41 @@ class myApp {
             elem.classList.remove('side-bar-opened')
         })
     }
-    // toggleMobileMenu() {
-    //     popup.innerHTML = ""
-    //             popup.appendChild(div)
-    //             this.togglePopup("open")
-    //             document.querySelector(".container").classList.add("side-bar-opened")
-    // }
+    toggleThemeInit() {
+        function toggleDarkMode(state: boolean) {
+            if (state) {
+                document.documentElement.dataset.theme = 'dark';
+                localStorage.setItem('theme', 'dark');
+            }
+            else {
+                document.documentElement.dataset.theme = 'light';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        // if the user has a default theme
+        if (window.matchMedia) {
+            var match = window.matchMedia('(prefers-color-scheme: dark)')
+        
+            match.addEventListener('change', e => {
+                toggleDarkMode(match.matches);
+            })
+        
+        }   
+            
+            
+        // if the user already chose a theme for the page
+        // this will make the selected theme remain, even after reloading the page
+        var savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.dataset.theme = savedTheme;
+            localStorage.setItem('theme', savedTheme);
+        }
+        else {
+            document.documentElement.dataset.theme = "dark";
+            localStorage.setItem('theme', 'dark');
+        }
+        toggleDarkMode(false)
+    }
 
 }
 var app;

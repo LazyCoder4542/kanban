@@ -3,16 +3,14 @@
     margin: 0;
     box-sizing: border-box;
     font-family: 'Jakarta Sans';
+    transition-property: color, background-color, opacity, left, right, border-color;
+    transition-duration: 500ms
 }
 :root {
     --header-width: 6rem;
     --side-bar-width: 18rem;
-    --clr-background: #20212c;
-    --clr-header: rgb(43, 44, 55);
-    --clr-text: rgb(130, 143, 163);
     --clr-primary: rgb(99, 95, 199);
-    --clr-headings: #fff;
-    --clr-border: rgb(62, 63, 78);
+    --clr-primary2: rgba(99, 95, 199, 0.25);
     --clr-sec-one: rgb(73, 196, 229);
     --clr-sec-two: rgb(132, 113, 242);
     --clr-sec-three: rgb(103, 226, 174);
@@ -20,7 +18,36 @@
     --task-width: 18rem;
     --border: 0.06rem solid var(--clr-border);
     --padding: 2rem;
+    --clr-background: rgb(244, 247, 253);
+    --clr-header: #fff;
+    --clr-text: rgb(130, 143, 163);
+    --clr-headings: #000112;
+    --clr-border: rgb(228, 235, 250);
+    --clr-new-column: rgba(233, 239, 250, 0.5);
 }
+:root .dark {
+    display: none;
+}
+:root .light {
+    display: block;
+}
+:root[data-theme="dark"] {
+    --clr-primary2: var(--clr-headings);
+    --clr-background: #20212c;
+    --clr-header: rgb(43, 44, 55);
+    --clr-text: rgb(130, 143, 163);
+    --clr-headings: #fff;
+    --clr-border: rgb(62, 63, 78);
+    --clr-new-column: rgba(43, 44, 55, 0.125);
+    
+}
+:root[data-theme="dark"] .dark {
+    display: block;
+}
+:root[data-theme="dark"] .light {
+    display: none;
+}
+
 h1, h3 {
     color: var(--clr-headings);
 }
@@ -273,19 +300,22 @@ main {
     font-size: 0.94rem; 
     margin-left: calc(-1 * var(--padding));
     padding: .75rem 2rem;
-    display: in line-flex;
+    display: inline-flex;
     border-radius: 0 999px 999px 0;
     font-weight: 700;
     cursor: pointer;
     gap: 1rem;
 }
+.menu > .boards > div > span > span:nth-child(2) {
+    color: var(--clr-primary);
+}
 .menu > .boards > div > ul > li:not(.active):hover, .menu > .boards > div > span:hover, #hideSideBar:hover {
-        background-color: var(--clr-headings);
+        background-color: var(--clr-primary2);
         color: var(--clr-primary)
 }
 .menu > .boards > div > ul > li.active {
     background-color: var(--clr-primary);
-    color: var(--clr-headings);
+    color: #fff;
 }
 .menu > .theme {
     background-color: var(--clr-background);
@@ -297,19 +327,31 @@ main {
     gap: 1rem;
 }
 .menu > .theme > .toggle {
-    height: auto;
-    width: 3rem;
+    position: relative;
+    width: 2.5rem;
     background-color: var(--clr-primary);
-    padding: .25rem;
     border-radius: 999px;
     cursor: pointer;
+    box-sizing: content-box;
+    padding: .25rem;
+    height: 1rem;
+}
+.menu > .theme > .toggle:hover {
+    background-color: rgb(168, 164, 255);
 }
 .menu > .theme > .toggle > span {
+    margin: .25rem;
+    position: absolute;
+    left: 0;
+    top: 0;
     display: block;
-    width: 1rem;
+    height: 1rem;
     border-radius: 50%;
     aspect-ratio: 1 / 1;
-    background-color: var(--clr-headings);
+    background-color: #fff;
+}
+:root[data-theme="dark"] .menu > .theme > .toggle > span {
+    left: calc(100% - 1.5rem);
 }
 
 
@@ -323,7 +365,7 @@ main {
     place-content: center;
     height: 60vh;
     width: var(--task-width);
-    background-color: rgba(43, 44, 55, 0.125);
+    background-color: var(--clr-new-column);
     padding: 1.5rem 1rem;
     border-radius: 0.5rem;
     margin-top: 1.9rem;
@@ -582,20 +624,38 @@ main {
 }
 .btn.btn-primary {
     background-color: var(--clr-primary);
-    color: var(--clr-headings)
+    color: var(--clr-header)
 }
 .btn.btn-secondary {
-    background-color: var(--clr-headings);
+    background-color: var(--clr-primary2);
     color: var(--clr-primary)
+}
+:root[data-theme="dark"] .btn.btn-secondary {
+    background-color: var(--clr-headings);
+}
+:root[data-theme="dark"] .btn.btn-primary {
+    color: var(--clr-headings)
 }
 
 
 
 
 @media screen and (max-width: 540px) {
+    h1 {
+        font-size: 1.13rem;
+    }
+    h2 {
+        font-size: 0.75rem;
+        letter-spacing: 0.15rem;
+        font-weight: 700;
+        color: var(--clr-text)
+    }
     :root {
         --padding: 1rem;
         --header-width: 5rem;
+    }
+    #addTask {
+        padding: .125rem 1rem
     }
     #addTask::after {
         content: "+";
@@ -626,6 +686,22 @@ main {
     }
     #site-header > div:nth-child(2) {
         width: 100%;
+        gap: .5rem;
+        padding-left: 0;
+    }
+    #site-header > div:nth-child(2) > h1 {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem
+    }
+    #site-header > div:nth-child(2) > h1::after {
+        content: "";
+        display: block;
+        width: 1rem;
+        height: 1rem;
+        aspect-ratio: 1 / 1;
+        -webkit-mask-image: url(../assets/icons/dropdown.svg);
+        background-color: var(--clr-primary);
     }
     main {
         margin-left: 0 !important;
