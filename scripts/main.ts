@@ -786,7 +786,6 @@ class myApp {
             document.documentElement.dataset.theme = "dark";
             localStorage.setItem('theme', 'dark');
         }
-        toggleDarkMode(false)
     }
 
 }
