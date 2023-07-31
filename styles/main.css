@@ -47,6 +47,9 @@
 :root[data-theme="dark"] .light {
     display: none;
 }
+:root[data-theme="dark"]  * {
+    color-scheme: dark;
+}
 
 h1, h3 {
     color: var(--clr-headings);
