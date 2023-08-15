@@ -789,7 +789,12 @@ class myApp {
     }
 
 }
-var app;
-fetch('./data/dev-data.json').then(res => res.json()).then(data => {
-    app = new myApp(data)
-})
+
+//FETCH DATA
+const app = async () => {
+    let data = await fetch('./data/dev-data.json').then(res => res.json())
+    return new myApp(data)
+}
+
+// INITIALIZE
+const APP = app()
